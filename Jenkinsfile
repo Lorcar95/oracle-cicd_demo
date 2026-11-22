@@ -37,5 +37,20 @@ pipeline {
                 '''
             }
         }
+	stage('Prepare Git Branches') {
+    		steps {
+        	sh '''
+            		echo "Preparing main branch for SQLcl comparison..."
+
+            	git branch -f main origin/main
+
+            		echo "Available branches:"
+            	git branch -a
+
+		        echo "Comparing changes:"
+	        git diff --name-status main...HEAD -- src/
+        '''
+    	}
+}
     }
 }
