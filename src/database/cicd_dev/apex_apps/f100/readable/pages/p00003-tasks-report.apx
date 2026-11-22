@@ -1,0 +1,187 @@
+page 3 (
+    name: Tasks report
+    alias: TASKS-REPORT
+    title: Tasks report
+    appearance {
+        pageTemplate: @/standard
+        templateOptions: #DEFAULT#
+    }
+
+    region breadcrumb (
+        name: Breadcrumb
+        type: breadcrumb
+        source {
+            breadcrumb: @breadcrumb
+        }
+        layout {
+            sequence: 10
+            slot: breadcrumbBar
+        }
+        appearance {
+            template: @/title-bar
+            templateOptions: [
+                #DEFAULT#
+                t-BreadcrumbRegion--useBreadcrumbTitle
+            ]
+        }
+        componentAppearance {
+            breadcrumbTemplate: @/breadcrumb
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    region tasks-report (
+        name: Tasks report
+        type: interactiveReport
+        source {
+            location: localDatabase
+            tableName: DEMO_TASKS
+        }
+        layout {
+            sequence: 10
+            slot: body
+        }
+        appearance {
+            template: @/interactive-report
+            templateOptions: [
+                #DEFAULT#
+                t-IRR-region--hideHeader js-addHiddenHeadingRoleDesc
+            ]
+        }
+        pagination {
+            type: rowRangesXToY
+        }
+        messages {
+            whenNoDataFound: No data found.
+            whenMoreDataFound: The maximum row count for this report is #MAX_ROW_COUNT# rows.  Please apply a filter to reduce the number of records in your query.
+        }
+        advanced {
+            savedReportMappingIdentifier: 8034065627472577
+        }
+
+        column CREATED_AT (
+            type: plainText
+            heading {
+                heading: Created At
+            }
+            layout {
+                sequence: 4
+            }
+            appearance {
+                formatMask: SINCE
+            }
+            source {
+                dataType: date
+            }
+            advanced {
+                endUserAlias: D
+            }
+        )
+
+        column STATUS (
+            type: plainText
+            heading {
+                heading: Status
+            }
+            layout {
+                sequence: 3
+            }
+            source {
+                dataType: varchar2
+            }
+            advanced {
+                endUserAlias: C
+            }
+        )
+
+        column TASK_ID (
+            type: hidden
+            heading {
+                heading: Task ID
+            }
+            layout {
+                sequence: 0
+            }
+            source {
+                primaryKey: true
+                dataType: number
+            }
+            advanced {
+                endUserAlias: A
+            }
+        )
+
+        column TASK_NAME (
+            type: plainText
+            heading {
+                heading: Task Name
+            }
+            layout {
+                sequence: 2
+            }
+            source {
+                dataType: varchar2
+            }
+            advanced {
+                endUserAlias: B
+            }
+        )
+
+        page {
+            borderWidth: 0.5
+            borderColor: #666666
+        }
+
+        savedReport primary (
+            visibility: primaryDefault
+            view {
+                rowsPerPage: 50
+            }
+
+            displayColumn CREATED_AT (
+                sequence: 4
+            )
+
+            displayColumn STATUS (
+                sequence: 3
+            )
+
+            displayColumn TASK_ID (
+                sequence: 1
+            )
+
+            displayColumn TASK_NAME (
+                sequence: 2
+            )
+
+        )
+
+    )
+
+    button new (
+        buttonName: CREATE
+        label: Create
+        layout {
+            sequence: 10
+            region: @tasks-report
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--large
+                t-Button--iconLeft
+            ]
+            icon: fa-plus
+        }
+        behavior {
+            action: redirectThisApp
+            target: {
+                page: 2
+            }
+        }
+    )
+
+)
+

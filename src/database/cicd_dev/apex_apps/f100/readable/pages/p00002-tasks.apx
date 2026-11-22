@@ -1,0 +1,311 @@
+page 2 (
+    name: Tasks
+    alias: TASKS
+    title: Tasks
+    appearance {
+        pageTemplate: @/standard
+        templateOptions: #DEFAULT#
+    }
+
+    region breadcrumb (
+        name: Breadcrumb
+        type: breadcrumb
+        source {
+            breadcrumb: @breadcrumb
+        }
+        layout {
+            sequence: 10
+            slot: breadcrumbBar
+        }
+        appearance {
+            template: @/title-bar
+            templateOptions: [
+                #DEFAULT#
+                t-BreadcrumbRegion--useBreadcrumbTitle
+            ]
+        }
+        componentAppearance {
+            breadcrumbTemplate: @/breadcrumb
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    region tasks (
+        name: Tasks
+        type: form
+        source {
+            location: localDatabase
+            tableName: DEMO_TASKS
+        }
+        layout {
+            sequence: 10
+            slot: body
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--scrollBody
+            ]
+        }
+        edit {
+            enabled: true
+            allowedOperations: [
+                add
+                update
+                delete
+            ]
+        }
+    )
+
+    pageItem P2_CREATED_AT (
+        type: datePicker
+        label {
+            label: Created At
+            alignment: right
+        }
+        layout {
+            sequence: 40
+            region: @tasks
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/required-floating
+            templateOptions: #DEFAULT#
+            width: 32
+        }
+        validation {
+            valueRequired: true
+            maxLength: 255
+        }
+        source {
+            formRegion: @tasks
+            column: CREATED_AT
+            dataType: timestamp
+        }
+    )
+
+    pageItem P2_STATUS (
+        type: textField
+        label {
+            label: Status
+            alignment: right
+        }
+        layout {
+            sequence: 30
+            region: @tasks
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/required-floating
+            templateOptions: #DEFAULT#
+            width: 32
+        }
+        validation {
+            valueRequired: true
+            maxLength: 20
+        }
+        source {
+            formRegion: @tasks
+            column: STATUS
+            dataType: varchar2
+        }
+    )
+
+    pageItem P2_TASK_ID (
+        type: hidden
+        layout {
+            sequence: 10
+            region: @tasks
+            slot: regionBody
+        }
+        source {
+            formRegion: @tasks
+            column: TASK_ID
+            dataType: number
+            queryOnly: true
+            primaryKey: true
+        }
+        security {
+            sessionStateProtection: checksumRequiredSessionLevel
+        }
+    )
+
+    pageItem P2_TASK_NAME (
+        type: textField
+        label {
+            label: Task Name
+            alignment: right
+        }
+        layout {
+            sequence: 20
+            region: @tasks
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/required-floating
+            templateOptions: #DEFAULT#
+            width: 32
+        }
+        validation {
+            valueRequired: true
+            maxLength: 200
+        }
+        source {
+            formRegion: @tasks
+            column: TASK_NAME
+            dataType: varchar2
+        }
+    )
+
+    button cancel (
+        buttonName: CANCEL
+        label: Cancel
+        layout {
+            sequence: 10
+            region: @tasks
+            slot: close
+        }
+        appearance {
+            buttonTemplate: @/text
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            action: redirectThisApp
+            target: {
+                page: 1
+            }
+            warnOnUnsavedChanges: doNotCheck
+        }
+    )
+
+    button create (
+        buttonName: CREATE
+        label: Create
+        layout {
+            sequence: 40
+            region: @tasks
+            slot: create
+        }
+        appearance {
+            buttonTemplate: @/text
+            hot: true
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            warnOnUnsavedChanges: doNotCheck
+            databaseAction: insert
+        }
+        serverSideCondition {
+            type: itemIsNull
+            item: P2_TASK_ID
+        }
+    )
+
+    button delete (
+        buttonName: DELETE
+        label: Delete
+        layout {
+            sequence: 20
+            region: @tasks
+            slot: delete
+        }
+        appearance {
+            buttonTemplate: @/text
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            executeValidations: false
+            warnOnUnsavedChanges: doNotCheck
+            databaseAction: delete
+            requiresConfirmation: true
+        }
+        confirmation {
+            message: &APP_TEXT$DELETE_MSG!RAW.
+            style: danger
+        }
+        serverSideCondition {
+            type: itemIsNotNull
+            item: P2_TASK_ID
+        }
+    )
+
+    button save (
+        buttonName: SAVE
+        label: Apply Changes
+        layout {
+            sequence: 30
+            region: @tasks
+            slot: change
+        }
+        appearance {
+            buttonTemplate: @/text
+            hot: true
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            warnOnUnsavedChanges: doNotCheck
+            databaseAction: update
+        }
+        serverSideCondition {
+            type: itemIsNotNull
+            item: P2_TASK_ID
+        }
+    )
+
+    validation p2-created-at-must-be-timestamp (
+        name: P2_CREATED_AT must be timestamp
+        execution {
+            sequence: 30
+        }
+        validation {
+            type: itemIsAValidTimestamp
+            item: P2_CREATED_AT
+        }
+        error {
+            errorMessage: #LABEL# must be a valid timestamp.
+            associatedItem: @P2_CREATED_AT
+        }
+    )
+
+    process initialize-form-tasks (
+        name: Initialize form Tasks
+        type: formInitialization
+        formRegion: @tasks
+        execution {
+            sequence: 10
+            point: beforeHeader
+        }
+        advanced {
+            executionMappingIdentifier: 8031456800456107
+        }
+    )
+
+    process process-form-tasks (
+        name: Process form Tasks
+        type: formAutoRowProcessing
+        formRegion: @tasks
+        execution {
+            sequence: 10
+        }
+        advanced {
+            executionMappingIdentifier: 8031833333456108
+        }
+    )
+
+    branch (
+        execution {
+            sequence: 1
+        }
+        behavior {
+            target: {
+                page: 3
+            }
+        }
+    )
+
+)
+
