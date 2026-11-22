@@ -20,5 +20,14 @@ pipeline {
                 '''
             }
         }
+	
+	stage('Verify SQLcl') {
+ 	   steps {
+        	sh '''
+            		echo "Checking SQLcl installation..."
+	            	sql -version
+        '''
+    }
+}
     }
 }
