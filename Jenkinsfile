@@ -1,3 +1,4 @@
+
 pipeline {
     agent any
 
@@ -37,20 +38,65 @@ pipeline {
                 '''
             }
         }
-	stage('Prepare Git Branches') {
-    		steps {
-        	sh '''
-            		echo "Preparing main branch for SQLcl comparison..."
 
-            	git branch -f main origin/main
+        stage('Prepare Git Branches') {
+            steps {
+                sh '''
+                    echo "Preparing main branch for SQLcl comparison..."
 
-            		echo "Available branches:"
-            	git branch -a
+                    git branch -f main origin/main
 
-		        echo "Comparing changes:"
-	        git diff --name-status main...HEAD -- src/
-        '''
-    	}
-}
+                    echo "Available branches:"
+                    git branch -a
+
+                    echo "Comparing changes:"
+                    git diff --name-status main...HEAD -- src/
+                '''
+            }
+        }
+
+        stage('Generate Liquibase Changesets') {
+            when {
+                expression { params.GIT_BRANCH != 'main' }
+            }
+            steps {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'oracle-dev-credentials',
+                        usernameVariable: 'DB_USER',
+                        passwordVariable: 'DB_PASSWORD'
+                    )
+                ]) {
+                    sh '''
+                        set +x
+
+                        echo "Generating Liquibase changesets..."
+
+                        rm -rf dist
+
+                        printf 'project stage -branch-name main -verbose\\nexit\\n' |
+                        sql -S -L \
+                            -user "$DB_USER" \
+                            -password "$DB_PASSWORD" \
+                            -url "jdbc:oracle:thin:@//local-26ai:1521/FREEPDB1"
+
+                        test -f dist/releases/next/release.changelog.xml
+
+                        echo "Generated files:"
+                        find dist -type f | sort
+                    '''
+                }
+            }
+        }
+
+        stage('Archive Changesets') {
+            when {
+                expression { params.GIT_BRANCH != 'main' }
+            }
+            steps {
+                archiveArtifacts artifacts: 'dist/**/*',
+                                 fingerprint: true
+            }
+        }
     }
 }
