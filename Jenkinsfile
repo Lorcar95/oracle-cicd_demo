@@ -62,7 +62,6 @@ pipeline {
                 sh '''
                     set -eu
 
-                    git fetch origin main
                     git branch -f main origin/main
 
                     echo "Database changes compared with main:"
