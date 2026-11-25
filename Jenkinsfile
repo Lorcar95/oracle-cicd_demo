@@ -72,6 +72,24 @@ pipeline {
             }
         }
 
+        stage('Code Linting') {
+            steps {
+                sh '''
+                    set -eu
+
+                    sqlfluff --version
+
+                    git show main:.sqlfluff > /tmp/sqlfluff-ci-config
+
+                    git diff --name-only --diff-filter=AM -z main...HEAD \
+                        -- src/database/cicd_dev/tables/ |
+                        xargs -0 -r sqlfluff lint --config /tmp/sqlfluff-ci-config
+
+                    echo "Code linting completed successfully."
+                '''
+            }
+        }
+        
         stage('Generate Liquibase Changesets') {
             when {
                 expression { params.GIT_BRANCH != 'main' }
