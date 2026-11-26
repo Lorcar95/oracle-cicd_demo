@@ -82,7 +82,7 @@ pipeline {
                     git show main:.sqlfluff > /tmp/sqlfluff-ci-config
 
                     git diff --name-only --diff-filter=AM -z main...HEAD \
-                        -- src/database/cicd_dev/tables/ |
+                        -- src/database/cicd_dev/tables/ src/custom/ |
                         xargs -0 -r sqlfluff lint --config /tmp/sqlfluff-ci-config
 
                     echo "Code linting completed successfully."
@@ -114,9 +114,67 @@ pipeline {
                                 -password "$DB_PASSWORD" \
                                 -url "jdbc:oracle:thin:@//local-26ai:1521/FREEPDB1"
 
-                        test -f dist/releases/next/release.changelog.xml
 
                         echo "Liquibase changesets generated successfully."
+                    '''
+                }
+            }
+        }
+
+        stage('Process Custom SQL Scripts') {
+            when {
+                expression { params.GIT_BRANCH != 'main' }
+            }
+            steps {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'oracle-dev-credentials',
+                        usernameVariable: 'DB_USER',
+                        passwordVariable: 'DB_PASSWORD'
+                    )
+                ]) {
+                    sh '''
+                        set +x
+                        set -eu
+                        export LC_ALL=C
+                        branch=$(git branch --show-current)
+                        stage_dir="dist/releases/next/changes/$branch"
+                        list=$(mktemp)
+                        trap 'rm -f "$list"' EXIT
+
+                        git diff --no-renames --name-only --diff-filter=MDT main...HEAD -- src/custom/ > "$list"
+                        if [ -s "$list" ]; then
+                            echo "Existing custom migrations must not be modified or deleted."
+                            exit 1
+                        fi
+                        git diff --no-renames --name-only --diff-filter=A main...HEAD -- src/custom/ > "$list"
+                        sort -o "$list" "$list"
+                        while IFS= read -r source; do
+                            name=${source#src/custom/}
+                            case "$name" in
+                                ''|*[!a-zA-Z0-9_.-]*|.*|-*) echo "Invalid migration filename: $source"; exit 1 ;;
+                            esac
+                            case "$name" in
+                                *.sql) ;;
+                                *) echo "Only SQL migrations are supported: $source"; exit 1 ;;
+                            esac
+                            target="$stage_dir/_custom/$name"
+                            test ! -e "$target"
+                            printf 'project stage add-custom -file-name %s -changelog STAGE -verbose\\nexit\\n' "$name" |
+                                sql -S -L -user "$DB_USER" -password "$DB_PASSWORD" \
+                                    -url "jdbc:oracle:thin:@//local-26ai:1521/FREEPDB1"
+                            test -f "$target"
+                            grep -Eq '^-- changeset +SqlCl:[0-9]+' "$target"
+                            sed -i -E "s|^(-- changeset +)SqlCl:[0-9]+(.*) logicalFilePath:[^ ]+|\\1SqlCl:$name\\2 logicalFilePath:src/custom/$name|" "$target"
+                            grep -F "SqlCl:$name " "$target"
+                            grep -F "logicalFilePath:src/custom/$name" "$target"
+                            printf '\\n' >> "$target"
+                            cat "$source" >> "$target"
+                            printf '\\n' >> "$target"
+                            grep -F "_custom/$name" "$stage_dir/stage.changelog.xml"
+                        done < "$list"
+                        test -f dist/releases/next/release.changelog.xml
+                        echo "Custom SQL processing completed successfully."
                     '''
                 }
             }
