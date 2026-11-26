@@ -7,6 +7,33 @@ page 1 (
         templateOptions: #DEFAULT#
     }
 
+    region country-reference-data (
+        name: Country reference data
+        type: staticContent
+        source {
+            htmlCode:
+                ```html
+                <h3>Supported Countries</h3>
+                <ul>
+                    <li>Suriname</li>
+                    <li>Netherlands</li>
+                    <li>Thailand</li>
+                </ul>
+                ```
+        }
+        layout {
+            sequence: 10
+            slot: body
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--scrollBody
+            ]
+        }
+    )
+
     region task-manager (
         name: Task Manager
         type: staticContent

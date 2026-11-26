@@ -40,7 +40,7 @@ prompt APPLICATION 100 - Task Manager
 --       Items:                    7
 --       Validations:              1
 --       Processes:                6
---       Regions:                  6
+--       Regions:                  7
 --       Buttons:                  6
 --     Shared Components:
 --       Logic:
@@ -106,7 +106,7 @@ wwv_imp_workspace.create_flow(
 ,p_substitution_value_01=>'Task Manager'
 ,p_file_prefix=>nvl(wwv_flow_application_install.get_static_app_file_prefix,'')
 ,p_files_version=>2461367023717
-,p_version_scn=>'4902839'
+,p_version_scn=>'6406693'
 ,p_print_server_type=>'NATIVE'
 ,p_file_storage=>'DB'
 ,p_is_pwa=>'Y'
@@ -1088,6 +1088,26 @@ wwv_flow_imp_page.create_page(
 ,p_page_component_map=>'13'
 );
 wwv_flow_imp_page.create_page_plug(
+ p_id=>wwv_flow_imp.id(8037486318491802)
+,p_plug_name=>'Country reference data'
+,p_static_id=>'country-reference-data'
+,p_region_template_options=>'#DEFAULT#:t-Region--scrollBody'
+,p_plug_template=>4075786578761660127
+,p_plug_display_sequence=>10
+,p_plug_item_display_point=>'ABOVE'
+,p_location=>null
+,p_plug_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'<h3>Supported Countries</h3>',
+'<ul>',
+'    <li>Suriname</li>',
+'    <li>Netherlands</li>',
+'    <li>Thailand</li>',
+'</ul>'))
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'expand_shortcuts', 'N',
+  'output_as', 'HTML')).to_clob
+);
+wwv_flow_imp_page.create_page_plug(
  p_id=>wwv_flow_imp.id(8020022012445338)
 ,p_plug_name=>'Task Manager'
 ,p_static_id=>'task-manager'
@@ -1738,4 +1758,4 @@ prompt  ...done
 
 
 
--- sqlcl_snapshot {"hash":"e7ba440b26ad1b5b64a2baf401684b6983157279","type":"APEX","name":"f100.sql","schemaName":"CICD_DEV","sxml":""}
+-- sqlcl_snapshot {"hash":"611d977f7c3e77fdb3304d4f1644ba3cbca8b0c3","type":"APEX","name":"f100.sql","schemaName":"CICD_DEV","sxml":""}
